@@ -4,6 +4,13 @@ import pandas as pd
 from datetime import datetime
 from PIL import Image
 import os
+
+if not os.path.exists("captures"):
+    os.makedirs("captures")
+
+if not os.path.exists("trainer"):
+    os.makedirs("trainer")
+
 import random
 
 # -----------------------------
@@ -82,3 +89,4 @@ if os.path.exists(CSV_FILE):
         st.write("No attendance recorded yet.")
 else:
     st.write("No attendance recorded yet.")
+
