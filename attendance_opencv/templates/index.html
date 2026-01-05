@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Attendance System</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin-top: 50px; }
+        input, button { padding: 10px; font-size: 16px; margin: 5px; }
+        table { margin: auto; border-collapse: collapse; margin-top: 30px; }
+        th, td { padding: 10px; border: 1px solid #ccc; }
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Face Attendance System</h1>
+    <input type="text" id="name" placeholder="Enter your name">
+    <button onclick="capture()">Capture Attendance</button>
+    <div id="status">Status: Idle</div>
+
+    <h2>Attendance Records</h2>
+    <table id="attendanceTable">
+        <tr><th>Name</th><th>Time</th></tr>
+    </table>
+
+    <script>
+        async function capture() {
+            let name = document.getElementById("name").value.trim();
+            if (!name) {
+                alert("Please enter your name");
+                return;
+            }
+
+            document.getElementById("status").innerText = "Status: Capturing...";
+
+            let formData = new FormData();
+            formData.append("name", name);
+
+            let response = await fetch("/capture", {
+                method: "POST",
+                body: formData
+            });
+
+            let result = await response.json();
+
+            if (result.status === "success") {
+                document.getElementById("status").innerText = "Status: Marked " + result.name;
+                loadAttendance();
+            } else {
+                document.getElementById("status").innerText = "Status: Error";
+                alert(result.message);
+            }
+        }
+
+        async function loadAttendance() {
+            let response = await fetch("/get_attendance");
+            let data = await response.json();
+
+            let table = document.getElementById("attendanceTable");
+            table.innerHTML = "<tr><th>Name</th><th>Time</th></tr>";
+
+            data.forEach(row => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `<td>${row.name}</td><td>${row.time}</td>`;
+                table.appendChild(tr);
+            });
+        }
+
+        // load attendance on page load
+        loadAttendance();
+    </script>
+</body>
+</html>
