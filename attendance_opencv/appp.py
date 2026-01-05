@@ -5,9 +5,6 @@ from datetime import datetime
 import os
 import random
 
-# -----------------------------
-# CONFIG
-# -----------------------------
 CSV_FILE = "attendance.csv"
 CAPTURE_FOLDER = "captures"
 QUOTES = [
@@ -19,20 +16,15 @@ QUOTES = [
 
 os.makedirs(CAPTURE_FOLDER, exist_ok=True)
 
-# -----------------------------
-# STREAMLIT PAGE
-# -----------------------------
 st.title("📸 Face Attendance System")
 st.write("Enter your Name and Roll Number, click Capture, and your attendance will be marked!")
 
-# Input fields
 name = st.text_input("Enter Name")
 roll_no = st.text_input("Enter Roll Number")
 
-# Take photo in browser
+# Use Streamlit camera input instead of OpenCV
 img_file_buffer = st.camera_input("Take your photo")
 
-# Capture button
 if st.button("Capture Attendance"):
     if name.strip() == "" or roll_no.strip() == "":
         st.error("Please enter both Name and Roll Number!")
@@ -63,9 +55,7 @@ if st.button("Capture Attendance"):
         st.image(img, width=400)
         st.info(random.choice(QUOTES))
 
-# -----------------------------
-# SHOW ATTENDANCE RECORDS
-# -----------------------------
+# Show attendance records
 st.markdown("### 📋 Attendance Records")
 if os.path.exists(CSV_FILE):
     df = pd.read_csv(CSV_FILE)
