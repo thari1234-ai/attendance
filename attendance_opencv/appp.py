@@ -17,7 +17,6 @@ QUOTES = [
     "Your only limit is your mind."
 ]
 
-# Ensure folder exists
 os.makedirs(CAPTURE_FOLDER, exist_ok=True)
 
 # -----------------------------
@@ -30,12 +29,12 @@ st.write("Enter your Name and Roll Number, click Capture, and your attendance wi
 name = st.text_input("Enter Name")
 roll_no = st.text_input("Enter Roll Number")
 
-# Camera input
+# Take photo in browser
 img_file_buffer = st.camera_input("Take your photo")
 
-# Capture Attendance
+# Capture button
 if st.button("Capture Attendance"):
-    if not name.strip() or not roll_no.strip():
+    if name.strip() == "" or roll_no.strip() == "":
         st.error("Please enter both Name and Roll Number!")
     elif img_file_buffer is None:
         st.error("Please take a photo!")
@@ -46,7 +45,7 @@ if st.button("Capture Attendance"):
         img = Image.open(img_file_buffer)
         img.save(img_filename)
 
-        # Save attendance to CSV
+        # Save to CSV
         if not os.path.exists(CSV_FILE):
             df = pd.DataFrame(columns=["Name", "Roll No", "Time", "Image"])
         else:
@@ -58,10 +57,8 @@ if st.button("Capture Attendance"):
             "Time": datetime.now().strftime("%H:%M:%S"),
             "Image": img_filename
         }])], ignore_index=True)
-
         df.to_csv(CSV_FILE, index=False)
 
-        # Show success message
         st.success(f"Attendance marked for {name} at {datetime.now().strftime('%H:%M:%S')}!")
         st.image(img, width=400)
         st.info(random.choice(QUOTES))
@@ -73,7 +70,7 @@ st.markdown("### 📋 Attendance Records")
 if os.path.exists(CSV_FILE):
     df = pd.read_csv(CSV_FILE)
     if not df.empty:
-        for _, row in df.iterrows():
+        for index, row in df.iterrows():
             img_path = row.get("Image", "")
             if isinstance(img_path, str) and os.path.exists(img_path):
                 img = Image.open(img_path)
