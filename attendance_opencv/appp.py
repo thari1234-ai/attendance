@@ -1,21 +1,10 @@
 import streamlit as st
-import cv2
+from PIL import Image
 import pandas as pd
 from datetime import datetime
-from PIL import Image
 import os
-
-if not os.path.exists("captures"):
-    os.makedirs("captures")
-
-if not os.path.exists("trainer"):
-    os.makedirs("trainer")
-
 import random
 
-# -----------------------------
-# CONFIG
-# -----------------------------
 CSV_FILE = "attendance.csv"
 CAPTURE_FOLDER = "captures"
 QUOTES = [
@@ -27,50 +16,44 @@ QUOTES = [
 
 os.makedirs(CAPTURE_FOLDER, exist_ok=True)
 
-# -----------------------------
-# STREAMLIT PAGE
-# -----------------------------
 st.title("📸 Face Attendance System")
 st.write("Enter your Name and Roll Number, click Capture, and your attendance will be marked!")
 
-# Input fields
 name = st.text_input("Enter Name")
 roll_no = st.text_input("Enter Roll Number")
 
-# Capture button
+img_file_buffer = st.camera_input("Take your photo")
+
 if st.button("Capture Attendance"):
     if name.strip() == "" or roll_no.strip() == "":
         st.error("Please enter both Name and Roll Number!")
+    elif img_file_buffer is None:
+        st.error("Please take a photo!")
     else:
-        # Capture image from webcam
-        cam = cv2.VideoCapture(0)
-        ret, frame = cam.read()
-        cam.release()
-        if not ret:
-            st.error("Failed to access webcam.")
+        # Save image
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        img_filename = f"{CAPTURE_FOLDER}/{name}_{roll_no}_{timestamp}.png"
+        img = Image.open(img_file_buffer)
+        img.save(img_filename)
+
+        # Save to CSV
+        if not os.path.exists(CSV_FILE):
+            df = pd.DataFrame(columns=["Name", "Roll No", "Time", "Image"])
         else:
-            # Save image
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            img_filename = f"{CAPTURE_FOLDER}/{name}_{roll_no}_{timestamp}.png"
-            cv2.imwrite(img_filename, frame)
+            df = pd.read_csv(CSV_FILE)
 
-            # Save to CSV
-            if not os.path.exists(CSV_FILE):
-                df = pd.DataFrame(columns=["Name", "Roll No", "Time", "Image"])
-            else:
-                df = pd.read_csv(CSV_FILE)
+        df = pd.concat([df, pd.DataFrame([{
+            "Name": name,
+            "Roll No": roll_no,
+            "Time": datetime.now().strftime("%H:%M:%S"),
+            "Image": img_filename
+        }])], ignore_index=True)
+        df.to_csv(CSV_FILE, index=False)
 
-            df = pd.concat([df, pd.DataFrame([{
-                "Name": name,
-                "Roll No": roll_no,
-                "Time": datetime.now().strftime("%H:%M:%S"),
-                "Image": img_filename
-            }])], ignore_index=True)
-            df.to_csv(CSV_FILE, index=False)
+        st.success(f"Attendance marked for {name} at {datetime.now().strftime('%H:%M:%S')}!")
+        st.image(img, width=400)
+        st.info(random.choice(QUOTES))
 
-            st.success(f"Attendance marked for {name} at {datetime.now().strftime('%H:%M:%S')}!")
-            st.image(frame[:, :, ::-1], width=400)  # OpenCV uses BGR -> convert to RGB
-            st.info(random.choice(QUOTES))
 
 # -----------------------------
 # SHOW ATTENDANCE RECORDS
@@ -89,4 +72,5 @@ if os.path.exists(CSV_FILE):
         st.write("No attendance recorded yet.")
 else:
     st.write("No attendance recorded yet.")
+
 
